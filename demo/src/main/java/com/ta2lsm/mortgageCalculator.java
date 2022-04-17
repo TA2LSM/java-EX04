@@ -1,8 +1,78 @@
 package com.ta2lsm;
 
-//import java.util.Scanner;
+import java.util.*;
+import java.text.*;
+import java.util.Scanner;
 
 public class mortgageCalculator {
+    final static byte MONTHS_IN_YEAR = 12;      // static yazılmazsa OLMUYOR !!!
+    final static byte PERCENT_DIVIDER = 100;    // Bir Class içinde static olan metotlar SADECE static olan tanımlamalara erişebilirler.
+
+    final static int MIN_PRINCIPAL = 1_000;
+    final static int MAX_PRINCIPAL = 1_000_000;
+    final static float MIN_ANNUAL_INTEREST = 0F;
+    final static float MAX_ANNUAL_INTEREST = 30F;
+    final static byte MIN_YEAR = 1;
+    final static byte MAX_YEAR = 30;    
+
+    /**
+     * Reads numbers from keyboard input
+     * @param keyboardInput Scanner class object for System.in
+     * @param prompt Display message for user input
+     * @param minVal Minimum valid input
+     * @param maxVal Maximum valid input
+     * @return a double value. Cast for suitable variable type
+     */
+    private static double readNumber(Scanner keyboardInput, String prompt, double minVal, double maxVal) {  
+        double readedVal;
+
+        while( true ) {
+            System.out.print(prompt);
+            readedVal = keyboardInput.nextDouble();
+
+            if(readedVal >= minVal && readedVal <= maxVal)
+                break;
+
+            System.out.println("Enter a value between: " + minVal + " - " + maxVal);
+        }
+
+        return readedVal;
+    }
+
+    /**
+     * 
+     */
+    public static void startCalculation() {
+        Scanner keyboardInput = new Scanner(System.in);
+        int principal = (int)readNumber(keyboardInput, "Principal ($1K - $1M): ", MIN_PRINCIPAL, MAX_PRINCIPAL);
+        float annualInterest = (float)readNumber(keyboardInput, "Annual Interest Rate: ", MIN_ANNUAL_INTEREST, MAX_ANNUAL_INTEREST);
+        byte years = (byte)readNumber(keyboardInput, "Period (Years): ", MIN_YEAR, MAX_YEAR);
+        keyboardInput.close();        // keyboard girişini readNumber() kısmında kapatırsak sıkıntı oluyor.
+
+        double mortgage = mortgageCalculator.calculateMortgage(principal, annualInterest, years);
+
+        NumberFormat currency = NumberFormat.getCurrencyInstance(Locale.US);
+        System.out.printf("%nMORTGAGE%n--------%nMonthly Payments: %s%n", currency.format(mortgage));  
+        System.out.printf("Total Amount of Payment: %s%n%n", currency.format(mortgage * years * (float)MONTHS_IN_YEAR));     
+        System.out.printf("PAYMENT SCHEDULE%n----------------%n");  
+
+        //float[] payments = new float[years * MONTHS_IN_YEAR];  // float dizi tanımlama
+
+        float calcVal;
+        float prevCalcVal = 0;
+        int numberOfPayments = years * MONTHS_IN_YEAR;
+
+        for(short i = 1; i <= numberOfPayments; i++)
+        {        
+            calcVal = (float)mortgageCalculator.calculateBalance(principal, annualInterest, years, i);
+           
+            System.out.printf("PAYMENT: %03d/%03d - AMOUNT: %s (BALANCE: %s)%n", i, numberOfPayments, currency.format(principal - calcVal - prevCalcVal), currency.format(calcVal)); 
+            prevCalcVal = principal - calcVal; 
+        }
+        
+        System.out.printf("%nSUCCESSFULLY PAID ALL YOUR DEBTS. CONGRATULATIONS...%n%n");        
+    }
+
     /**
      * Mortgage Calcualtor: Yıl olarak geri ödeme süresine göre aylık bedel hesaplanacaktır
      * @param principal Yıllık gelir
@@ -13,9 +83,6 @@ public class mortgageCalculator {
     public static double calculateMortgage(
         int principal, float annualInterest, byte years) {
 
-        final byte MONTHS_IN_YEAR = 12;
-        final byte PERCENT_DIVIDER = 100;
-
         float monthlyInterest = annualInterest / PERCENT_DIVIDER / MONTHS_IN_YEAR;
         short numberOfPayments = (short)(years * MONTHS_IN_YEAR);
 
@@ -25,7 +92,6 @@ public class mortgageCalculator {
 
         return mortgage;
     }
-
 
     /**
      * 
@@ -45,9 +111,6 @@ public class mortgageCalculator {
          *               / [ (1+monthlyInterest)^numberOfPayments - 1 ]
          */            
 
-        final byte MONTHS_IN_YEAR = 12;
-        final byte PERCENT_DIVIDER = 100;
-
         float calcVal = 0;
         float monthlyInterest = annualInterest / PERCENT_DIVIDER / MONTHS_IN_YEAR;
         int numberOfPayments = years * MONTHS_IN_YEAR;
@@ -66,15 +129,6 @@ public class mortgageCalculator {
     //  * @param name
     //  */
     // public static double calculateMortgage2() {
-    //     final byte MONTHS_IN_YEAR = 12;
-    //     final byte PERCENT_DIVIDER = 100;
-    //     final int MIN_PRINCIPAL = 1_000;
-    //     final int MAX_PRINCIPAL = 1_000_000;
-    //     final float MIN_ANNUAL_RATE = 0F;
-    //     final float MAX_ANNUAL_RATE = 30F;
-    //     final byte MIN_YEAR = 1;
-    //     final byte MAX_YEAR = 30;
-
     //     int principal = 0;
     //     float rate = 0;
     //     int months = 0;
